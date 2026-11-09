@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>扫码内容</title>
 <style>
+  :root { --fs: clamp(2.5rem, 11vw, 6rem); }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { height: 100%; }
   body {
@@ -14,18 +15,81 @@
     background: #ffffff;
     font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
     padding: 24px;
+    overflow: hidden;
   }
   .text {
-    font-size: clamp(2.5rem, 11vw, 6rem);
+    font-size: var(--fs);
     font-weight: 700;
     line-height: 1.4;
     text-align: center;
     color: #111111;
     word-break: break-word;
   }
+  .ch {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(0.4em);
+    animation: fadeUp 0.5s ease-out forwards;
+  }
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  #giveOverlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs);
+    font-weight: 700;
+    color: #111111;
+    background: transparent;
+    pointer-events: none;
+    opacity: 0;
+  }
+  #giveOverlay.zoom {
+    opacity: 1;
+    animation: zoomIn 1.4s cubic-bezier(0.6, 0, 0.8, 0.4) forwards;
+  }
+  @keyframes zoomIn {
+    from { transform: scale(1); }
+    to { transform: scale(30); }
+  }
+  #giveOverlay.fade {
+    transition: opacity 0.8s ease-out;
+    opacity: 0 !important;
+  }
 </style>
 </head>
 <body>
-  <div class="text">扫码的是給</div>
+  <div class="text" id="text"></div>
+  <div id="giveOverlay">給</div>
+<script>
+  const str = "扫码的是給";
+  const text = document.getElementById("text");
+  const step = 600; // 每个字间隔毫秒
+  [...str].forEach((c, i) => {
+    const s = document.createElement("span");
+    s.className = "ch";
+    s.textContent = c;
+    s.style.animationDelay = (i * step) + "ms";
+    if (i === str.length - 1) s.id = "give";
+    text.appendChild(s);
+  });
+
+  const overlay = document.getElementById("giveOverlay");
+  const give = document.getElementById("give");
+
+  // 全部字出现后，再停 2.5 秒，开始「給」满屏特效
+  setTimeout(() => {
+    give.style.visibility = "hidden"; // 保留占位，隐藏原字
+    overlay.classList.add("zoom");
+    // 放大满屏后停留 0.6 秒，再淡出消失
+    setTimeout(() => {
+      overlay.classList.add("fade");
+      setTimeout(() => overlay.remove(), 900);
+    }, 1400 + 600);
+  }, str.length * step + 2500);
+</script>
 </body>
 </html>
