@@ -38,32 +38,36 @@
     position: fixed;
     inset: 0;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    font-size: var(--fs);
-    font-weight: 700;
-    color: #111111;
-    background: transparent;
+    align-content: center;
+    overflow: hidden;
+    background: #ffffff;
     pointer-events: none;
     opacity: 0;
   }
-  #giveOverlay.zoom {
-    opacity: 1;
-    animation: zoomIn 1.4s cubic-bezier(0.6, 0, 0.8, 0.4) forwards;
-  }
-  @keyframes zoomIn {
-    from { transform: scale(1); }
-    to { transform: scale(30); }
-  }
+  #giveOverlay.show { opacity: 1; }
   #giveOverlay.fade {
     transition: opacity 0.8s ease-out;
     opacity: 0 !important;
+  }
+  .mini {
+    font-weight: 700;
+    color: #111111;
+    line-height: 1.2;
+    opacity: 0;
+    transform: scale(0.4);
+    animation: popIn 0.3s ease-out forwards;
+  }
+  @keyframes popIn {
+    to { opacity: 1; transform: scale(1); }
   }
 </style>
 </head>
 <body>
   <div class="text" id="text"></div>
-  <div id="giveOverlay">給</div>
+  <div id="giveOverlay"></div>
 <script>
   const str = "扫码的是給";
   const text = document.getElementById("text");
@@ -80,15 +84,32 @@
   const overlay = document.getElementById("giveOverlay");
   const give = document.getElementById("give");
 
-  // 全部字出现后，再停 2.5 秒，开始「給」满屏特效
+  // 全部字出现后，再停 2.5 秒，开始满屏「給」特效
   setTimeout(() => {
-    give.style.visibility = "hidden"; // 保留占位，隐藏原字
-    overlay.classList.add("zoom");
-    // 放大满屏后停留 0.6 秒，再淡出消失
+    give.style.visibility = "hidden"; // 隐藏原字，保留占位
+
+    // 计算能铺满整屏的「給」数量
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const fs = Math.max(40, Math.min(vw, vh) * 0.12); // 每个「給」的字号
+    const cell = fs * 1.25;
+    const cols = Math.ceil(vw / cell), rows = Math.ceil(vh / cell);
+    for (let i = 0; i < cols * rows; i++) {
+      const s = document.createElement("span");
+      s.className = "mini";
+      s.textContent = "給";
+      s.style.fontSize = fs + "px";
+      s.style.width = cell + "px";
+      s.style.textAlign = "center";
+      s.style.animationDelay = (Math.random() * 0.7) + "s"; // 随机先后冒出
+      overlay.appendChild(s);
+    }
+    overlay.classList.add("show");
+
+    // 满屏后停留 1 秒，再整体淡出消失
     setTimeout(() => {
       overlay.classList.add("fade");
       setTimeout(() => overlay.remove(), 900);
-    }, 1400 + 600);
+    }, 1000 + 1000);
   }, str.length * step + 2500);
 </script>
 </body>
