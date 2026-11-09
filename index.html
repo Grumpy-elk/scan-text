@@ -37,11 +37,6 @@
   #giveOverlay {
     position: fixed;
     inset: 0;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    align-content: center;
     overflow: hidden;
     background: #ffffff;
     pointer-events: none;
@@ -53,15 +48,16 @@
     opacity: 0 !important;
   }
   .mini {
+    position: absolute;
     font-weight: 700;
     color: #111111;
     line-height: 1.2;
     opacity: 0;
-    transform: scale(0.4);
+    transform: scale(0.4) rotate(var(--rot, 0deg));
     animation: popIn 0.3s ease-out forwards;
   }
   @keyframes popIn {
-    to { opacity: 1; transform: scale(1); }
+    to { opacity: 1; transform: scale(1) rotate(var(--rot, 0deg)); }
   }
 </style>
 </head>
@@ -71,46 +67,56 @@
 <script>
   const str = "扫码的是給";
   const text = document.getElementById("text");
-  const step = 600; // 每个字间隔毫秒
-  [...str].forEach((c, i) => {
-    const s = document.createElement("span");
-    s.className = "ch";
-    s.textContent = c;
-    s.style.animationDelay = (i * step) + "ms";
-    if (i === str.length - 1) s.id = "give";
-    text.appendChild(s);
-  });
-
   const overlay = document.getElementById("giveOverlay");
-  const give = document.getElementById("give");
+  const step = 600; // 每个字间隔毫秒
 
-  // 全部字出现后，再停 2.5 秒，开始满屏「給」特效
-  setTimeout(() => {
-    give.style.visibility = "hidden"; // 隐藏原字，保留占位
+  function playRound() {
+    // 重置舞台
+    text.innerHTML = "";
+    overlay.innerHTML = "";
+    overlay.className = "";
 
-    // 计算能铺满整屏的「給」数量
-    const vw = window.innerWidth, vh = window.innerHeight;
-    const fs = Math.max(40, Math.min(vw, vh) * 0.12); // 每个「給」的字号
-    const cell = fs * 1.25;
-    const cols = Math.ceil(vw / cell), rows = Math.ceil(vh / cell);
-    for (let i = 0; i < cols * rows; i++) {
+    // 第一阶段：逐字浮现
+    [...str].forEach((c, i) => {
       const s = document.createElement("span");
-      s.className = "mini";
-      s.textContent = "給";
-      s.style.fontSize = fs + "px";
-      s.style.width = cell + "px";
-      s.style.textAlign = "center";
-      s.style.animationDelay = (Math.random() * 0.7) + "s"; // 随机先后冒出
-      overlay.appendChild(s);
-    }
-    overlay.classList.add("show");
+      s.className = "ch";
+      s.textContent = c;
+      s.style.animationDelay = (i * step) + "ms";
+      if (i === str.length - 1) s.id = "give";
+      text.appendChild(s);
+    });
 
-    // 满屏后停留 1 秒，再整体淡出消失
+    // 全部出现后停留 1 秒，进入满屏「給」特效
     setTimeout(() => {
-      overlay.classList.add("fade");
-      setTimeout(() => overlay.remove(), 900);
-    }, 1000 + 1000);
-  }, str.length * step + 2500);
+      document.getElementById("give").style.visibility = "hidden";
+
+      const vw = window.innerWidth, vh = window.innerHeight;
+      const base = Math.min(vw, vh);
+      const count = 40; // 满屏「給」的数量
+      for (let i = 0; i < count; i++) {
+        const s = document.createElement("span");
+        s.className = "mini";
+        s.textContent = "給";
+        const fs = base * (0.06 + Math.random() * 0.16); // 随机大小
+        s.style.fontSize = fs + "px";
+        s.style.left = (Math.random() * (vw - fs)) + "px";  // 随机位置
+        s.style.top = (Math.random() * (vh - fs)) + "px";
+        s.style.setProperty("--rot", (Math.random() * 120 - 60) + "deg"); // 随机旋转
+        s.style.animationDelay = (Math.random() * 0.7) + "s"; // 随机先后冒出
+        overlay.appendChild(s);
+      }
+      overlay.classList.add("show");
+
+      // 满屏后停留 1 秒，整体淡出消失
+      setTimeout(() => {
+        overlay.classList.add("fade");
+        // 消失后稍停片刻，开始下一轮循环
+        setTimeout(playRound, 900 + 800);
+      }, 1000 + 1000);
+    }, str.length * step + 1000);
+  }
+
+  playRound();
 </script>
 </body>
 </html>
